@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 业主 -->
+	<div th:fragment="index">
+		<div id="person_index_iframe"></div>
+		<script type="text/javascript">
+			$("#person_index_iframe").load("/person/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-container">
+			<div class="layui-row layui-col-space10">
+				<div class="layui-col-md3">
+					<input type="text" id="name" placeholder="请输入业主名称"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md3">
+					<input type="text" id="id_card_number" placeholder="请输入业主身份证"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md3">
+					<input type="number" id="phone" placeholder="请输入业主手机号"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md3">
+					<button class="layui-btn" id="person_selectSubmitForm">搜索</button>
+					<button type="button" class="layui-btn" onclick="person_insert()">添加业主</button>
+				</div>
+			</div>
+			<div id="park_main_iframe"></div>
+		</div>
+		<script type="text/javascript">
+			//为查询按钮绑定事件
+			$("#person_selectSubmitForm").click(
+					function(e) {
+						e.preventDefault();//阻止默认事件
+						var name = $("#name").val();
+						var id_card_number = $("#id_card_number").val();
+						var phone = $("#phone").val();
+						$("#park_main_iframe").load(
+								"/person/select_div?name=" + name
+										+ "&id_card_number=" + id_card_number
+										+ "&phone=" + phone);
+					});
+			$("#person_selectSubmitForm").click();
+			var person_insert = function() {
+				layer.open({
+					type : 2,
+					content : '/person/insert',
+					area : [ '600px', '400px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="select_div">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th>姓名</th>
+					<th>性别</th>
+					<th>年龄</th>
+					<th>身份证</th>
+					<th>手机号</th>
+					<th>备注</th>
+					<th>修改</th>
+					<th>房屋</th>
+					<th>业主成员</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="person:${personList}">
+					<td th:text="${person.name}"></td>
+					<td th:text="${person.gender}"></td>
+					<td th:text="${person.age}"></td>
+					<td th:text="${person.id_card_number}"></td>
+					<td th:text="${person.phone}"></td>
+					<td th:text="${person.remark}"></td>
+					<td><button type="button" class="layui-btn"
+							th:onclick="'update_person('+${person.id}+')'">修改</button></td>
+					<td>
+						<button type="button" class="layui-btn"
+							th:onclick="'update_person_house('+${person.id}+')'">绑定/解绑</button>
+					</td>
+					<td>
+						<button type="button" class="layui-btn"
+							th:onclick="'person_memeber_insert('+${person.id}+')'">添加业主成员</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+			var update_person = function(id) {
+				layer.open({
+					type : 2,
+					content : '/person/update/' + id,
+					area : [ '600px', '500px' ]
+				});
+			}
+			var update_person_house = function(id) {
+				layer.open({
+					type : 2,
+					content : '/person/update/' + id + '/house',
+					area : [ '1000px', '600px' ]
+				});
+			}
+			var person_memeber_insert = function(person_id) {
+				layer.open({
+					type : 2,
+					content : '/person_member/insert/' + person_id,
+					area : [ '600px', '600px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="insert">
+		<form class="layui-form">
+			<div class="layui-form-item">
+				<label class="layui-form-label">姓名</label>
+				<div class="layui-input-block">
+					<input type="text" name="name" required lay-verify="required"
+						placeholder="姓名" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">性别</label>
+				<div class="layui-input-block">
+					<select name="gender" class="layui-input">
+						<option value="男">男</option>
+						<option value="女">女</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">年龄</label>
+				<div class="layui-input-block">
+					<input type="number" name="age" required lay-verify="required"
+						placeholder="年龄" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">身份证</label>
+				<div class="layui-input-block">
+					<input type="text" name="id_card_number" required
+						lay-verify="required" placeholder="身份证" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">手机号</label>
+				<div class="layui-input-block">
+					<input type="number" name="phone" required lay-verify="required"
+						placeholder="手机号" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" required lay-verify="required"
+						placeholder="备注" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">头像</label>
+				<div class="layui-input-block">
+					<div id="image_div"></div>
+					<input type="text" name="image" id="image_input"
+						disabled="disabled" required lay-verify="required"
+						placeholder="头像" autocomplete="off" class="layui-input">
+					<button type="button" class="layui-btn" id="test1">
+						<i class="layui-icon">&#xe67c;</i>上传图片
+					</button>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit lay-filter="personSubmitForm">立即提交</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			var uploadInst = upload
+					.render({
+						elem : '#test1',
+						url : '/upload',
+						done : function(res) {
+							//上传完毕回调
+							console.log(res);
+							console.log(1);
+							$("#image_div")
+									.html(
+											"<img width='300px' height='300px' src='/image/"+res.image_url+"'/>");
+							$("#image_input").val(res.image_url);
+						},
+						error : function() {
+							//请求异常回调
+							console.log(2);
+						}
+					});
+			//监听提交
+			form.on('submit(personSubmitForm)', function(data) {
+				$.ajax({
+					url : "/person",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						parent.layer.msg("操作成功");
+					},
+					error : function(err) {
+						parent.layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+	<div th:fragment="update">
+		<form class="layui-form">
+			<input type="hidden" name="id" th:value="${person.id}" />
+			<div class="layui-form-item">
+				<label class="layui-form-label">姓名</label>
+				<div class="layui-input-block">
+					<input type="text" name="name" th:value="${person.name}" required
+						lay-verify="required" placeholder="姓名" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">性别</label>
+				<div class="layui-input-block">
+					<select name="gender" class="layui-input">
+						<option th:if="${person.gender}=='男'" value="男"
+							selected="selected">男</option>
+						<option th:if="${person.gender}=='男'" value="女">女</option>
+						<option th:if="${person.gender}=='女'" value="男">男</option>
+						<option th:if="${person.gender}=='女'" value="女"
+							selected="selected">女</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">年龄</label>
+				<div class="layui-input-block">
+					<input type="number" name="age" th:value="${person.age}" required
+						lay-verify="required" placeholder="年龄" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">身份证</label>
+				<div class="layui-input-block">
+					<input type="text" name="id_card_number"
+						th:value="${person.id_card_number}" required lay-verify="required"
+						placeholder="身份证" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">手机号</label>
+				<div class="layui-input-block">
+					<input type="number" name="phone" th:value="${person.phone}"
+						required lay-verify="required" placeholder="手机号"
+						autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" th:value="${person.remark}"
+						required lay-verify="required" placeholder="备注" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<input type="hidden" name="image" th:value="${person.image}"
+					required lay-verify="required" placeholder="头像" autocomplete="off"
+					class="layui-input">
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit
+						lay-filter="personUpdateSubmitForm">立即提交</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(personUpdateSubmitForm)', function(data) {
+				$.ajax({
+					url : "/person/update",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+	<div th:fragment="update_house">
+		<table class="layui-table">
+			<caption>业主房屋</caption>
+			<thead>
+				<tr>
+					<th>楼栋编号</th>
+					<th>单元编号</th>
+					<th>房屋编号</th>
+					<th>楼层</th>
+					<th>户型</th>
+					<th>面积（平方米）</th>
+					<th>单价（元）</th>
+					<th>备注</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="house:${houseList2}">
+					<td th:text="${house.community_code}"></td>
+					<td th:text="${house.unit_code}"></td>
+					<td th:text="${house.code}"></td>
+					<td th:text="${house.floor}"></td>
+					<td th:text="${house.type_room}+${house.type_hall}"></td>
+					<td th:text="${house.area}"></td>
+					<td th:text="${house.price}"></td>
+					<td th:text="${house.remark}"></td>
+					<td><button type="button" class="layui-btn"
+							th:onclick="'unbindHouse('+${house.id}+')'">解绑</button></td>
+				</tr>
+			</tbody>
+		</table>
+		<table class="layui-table">
+			<caption>空闲房屋</caption>
+			<thead>
+				<tr>
+					<th>楼栋编号</th>
+					<th>单元编号</th>
+					<th>房屋编号</th>
+					<th>楼层</th>
+					<th>户型</th>
+					<th>面积（平方米）</th>
+					<th>单价（元）</th>
+					<th>备注</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="house:${houseList4}">
+					<td th:text="${house.community_code}"></td>
+					<td th:text="${house.unit_code}"></td>
+					<td th:text="${house.code}"></td>
+					<td th:text="${house.floor}"></td>
+					<td th:text="${house.type_room}+${house.type_hall}"></td>
+					<td th:text="${house.area}"></td>
+					<td th:text="${house.price}"></td>
+					<td th:text="${house.remark}"></td>
+					<td><button type="button" class="layui-btn"
+							th:onclick="'bindHouse('+${person.id}+','+${house.id}+')'">绑定</button></td>
+				</tr>
+			</tbody>
+		</table>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			var unbindHouse = function(house_id) {
+				$.ajax({
+					url : "/person/house/" + house_id + "/unbind",
+					type : "POST",
+					data : {},
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						parent.layer.msg("操作成功");
+					},
+					error : function(err) {
+						parent.layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+			var bindHouse = function(person_id, house_id) {
+				$.ajax({
+					url : "/person/" + person_id + "/house/" + house_id
+							+ "/bind",
+					type : "POST",
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						parent.layer.msg("操作成功");
+					},
+					error : function(err) {
+						parent.layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+		</script>
+	</div>
+</body>
+</html>

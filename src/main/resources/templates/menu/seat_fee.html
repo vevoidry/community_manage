@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 车位费 -->
+	<div th:fragment="index">
+		<div id="seat_fee_index_iframe"></div>
+		<script type="text/javascript">
+			$("#seat_fee_index_iframe").load("/person_project/seat_fee/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-container">
+			<div class="layui-row layui-col-space10">
+				<div class="layui-col-md4">
+					<input type="text" id="name" placeholder="请输入时间，如：2020年10月"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md2">
+					<input type="text" id="data_name" placeholder="基本信息"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md2">
+					<select id="is_handle" class="layui-input">
+						<option value="">请选择缴费状态</option>
+						<option value="true">已缴费</option>
+						<option value="false">未缴费</option>
+					</select>
+				</div>
+				<div class="layui-col-md1">
+					<button class="layui-btn" onclick="seat_fee()">搜索</button>
+				</div>
+			</div>
+			<div id="seat_fee_div"></div>
+		</div>
+		<script type="text/javascript">
+			var seat_fee = function() {
+				var data_name = $("#data_name").val();
+				var name = $("#name").val();
+				var is_handle = $("#is_handle").val();
+				$("#seat_fee_div").load(
+						"/person_project/seat_fee/select_div?name=" + name
+								+ "&is_handle=" + is_handle+ "&data_name=" + data_name);
+			}
+			seat_fee();
+		</script>
+	</div>
+	<div th:fragment="select_div">
+		<div class="layui-form-item">
+			<label class="layui-form-label">缴费方式</label>
+			<div class="layui-input-block">
+				<select id="method" class="layui-input">
+					<option value="微信">微信</option>
+					<option value="支付宝">支付宝</option>
+				</select>
+			</div>
+		</div>
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th>基本信息</th>
+					<th>业主姓名</th>
+					<th>项目名称</th>
+					<th>创建时间</th>
+					<th>缴费时间</th>
+					<th>缴费方式</th>
+					<th>费用</th>
+					<th>状态</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="person_project:${person_projectList}"
+					th:class="${!person_project.is_handle}? 'layui-bg-red'">
+					<td th:text="${person_project.data}"></td>
+					<td th:text="${person_project.person_name}"></td>
+					<td th:text="${person_project.project_name}"></td>
+					<td
+						th:text="${#strings.substring(person_project.create_time,0,19)}"></td>
+					<td th:text="${#strings.substring(person_project.end_time,0,19)}"></td>
+					<td th:text="${person_project.method}"></td>
+					<td th:text="${person_project.money}"></td>
+					<td><span th:if="${person_project.is_handle}">已缴费</span> <span
+						th:if="!${person_project.is_handle}">未缴费</span></td>
+					<td>
+						<button type="button" class="layui-btn"
+							th:if="!${person_project.is_handle}"
+							th:onclick="'handle('+${person_project.id}+')'">缴费</button>
+						<button type="button" class="layui-btn"
+							th:if="${person_project.is_handle}"
+							th:onclick="'unhandle('+${person_project.id}+')'">取消缴费</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+			var handle = function(id) {
+				var method = $("#method").val();
+				$.ajax({
+					url : "/person_project/person/" + id + "/handle/" + method,
+					type : "POST",
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+			var unhandle = function(id) {
+				$.ajax({
+					url : "/person_project/person/" + id + "/unhandle",
+					type : "POST",
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+			form.render();
+		</script>
+	</div>
+</body>
+</html>

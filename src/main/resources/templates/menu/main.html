@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 主页 -->
+	<div th:fragment="index">
+		<div id="index_iframe"></div>
+		<script type="text/javascript">
+			$("#index_iframe").load("/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-row layui-col-space10">
+			<div class="layui-col-md3">
+				<div class="layui-card">
+					<div class="layui-card-header layui-bg-cyan">楼栋</div>
+					<div class="layui-card-body layui-bg-gray">
+						<br />
+						<h1 th:text="${communitCount}"></h1>
+						<br />
+						<div>总数</div>
+					</div>
+				</div>
+			</div>
+			<div class="layui-col-md3">
+				<div class="layui-card">
+					<div class="layui-card-header layui-bg-cyan">单元</div>
+					<div class="layui-card-body layui-bg-gray">
+						<br />
+						<h1 th:text="${unitCount}"></h1>
+						<br />
+						<div>总数</div>
+					</div>
+				</div>
+			</div>
+			<div class="layui-col-md3">
+				<div class="layui-card">
+					<div class="layui-card-header layui-bg-cyan">房屋</div>
+					<div class="layui-card-body layui-bg-gray">
+						<br />
+						<h1 th:text="${nullHouseCount}+'/'+${houseCount}"></h1>
+						<br />
+						<div>空闲/总数</div>
+					</div>
+				</div>
+			</div>
+			<div class="layui-col-md3">
+				<div class="layui-card">
+					<div class="layui-card-header layui-bg-cyan">业主</div>
+					<div class="layui-card-body layui-bg-gray">
+						<br />
+						<h1 th:text="${personCount}"></h1>
+						<br />
+						<div>总数</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--  -->
+		<div class="layui-row layui-col-space10">
+			<div class="layui-col-md3">
+				<div class="layui-card">
+					<div class="layui-card-header layui-bg-cyan">停车场</div>
+					<div class="layui-card-body layui-bg-gray">
+						<br />
+						<h1 th:text="${parkCount}"></h1>
+						<br />
+						<div>总数</div>
+					</div>
+				</div>
+			</div>
+			<div class="layui-col-md3">
+				<div class="layui-card">
+					<div class="layui-card-header layui-bg-cyan">车位</div>
+					<div class="layui-card-body layui-bg-gray">
+						<br />
+						<h1 th:text="${nullSeatCount}+'/'+${seatCount}"></h1>
+						<br />
+						<div>空闲/总数</div>
+					</div>
+				</div>
+			</div>
+			<div class="layui-col-md3">
+				<div class="layui-card">
+					<div class="layui-card-header layui-bg-cyan">收费项目</div>
+					<div class="layui-card-body layui-bg-gray">
+						<br />
+						<h1 th:text="${projectCount}"></h1>
+						<br />
+						<div>总数</div>
+					</div>
+				</div>
+			</div>
+			<div class="layui-col-md3">
+				<div class="layui-card">
+					<div class="layui-card-header layui-bg-cyan">收费记录</div>
+					<div class="layui-card-body layui-bg-gray">
+						<br />
+						<h1
+							th:text="${handledPerson_projectCount}+'/'+${person_projectCount}"></h1>
+						<br />
+						<div>已缴费/总数</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--  -->
+		<div class="layui-row layui-col-space10">
+			<div class="layui-col-md3">
+				<div class="layui-card">
+					<div class="layui-card-header layui-bg-cyan">投诉建议</div>
+					<div class="layui-card-body layui-bg-gray">
+						<br />
+						<h1 th:text="${handledAdviceCount}+'/'+${adviceCount}"></h1>
+						<br />
+						<div>已处理/总数</div>
+					</div>
+				</div>
+			</div>
+			<div class="layui-col-md3">
+				<div class="layui-card">
+					<div class="layui-card-header layui-bg-cyan">维修</div>
+					<div class="layui-card-body layui-bg-gray">
+						<br />
+						<h1 th:text="${handledRepairCount}+'/'+${repairCount}"></h1>
+						<br />
+						<div>已处理/总数</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

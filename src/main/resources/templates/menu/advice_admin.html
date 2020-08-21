@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 投诉建议（管理员） -->
+	<div th:fragment="index">
+		<div id="advice_index_iframe"></div>
+		<script type="text/javascript">
+			$("#advice_index_iframe").load("/advice/admin/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-container">
+			<div class="layui-row  layui-col-space10">
+				<div class="layui-col-md3">
+					<select id="is_handle" class="layui-input">
+						<option value="">全部</option>
+						<option value="false">未处理</option>
+						<option value="true">已处理</option>
+					</select>
+				</div>
+				<div class="layui-col-md3">
+					<button class="layui-btn" id="advice_selectSubmitForm">搜索</button>
+				</div>
+			</div>
+			<div id="advice_main_iframe"></div>
+		</div>
+		<script type="text/javascript">
+			//为查询按钮绑定事件
+			$("#advice_selectSubmitForm").click(
+					function(e) {
+						e.preventDefault();//阻止默认事件
+						var is_handle = $("#is_handle").val();
+						$("#advice_main_iframe").load(
+								"/advice/admin/select_div?is_handle="
+										+ is_handle);
+					});
+			$("#advice_selectSubmitForm").click();
+		</script>
+	</div>
+	<div th:fragment="select_div">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th>业主</th>
+					<th>标题</th>
+					<th>内容</th>
+					<th>投诉建议时间</th>
+					<th>是否已处理</th>
+					<th>处理时间</th>
+					<th>处理</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="advice:${adviceList}">
+					<td th:text="${advice.person_name}"></td>
+					<td th:text="${advice.title}"></td>
+					<td th:text="${advice.content}"></td>
+					<td th:text="${#strings.substring(advice.start_time,0,19)}"></td>
+					<td th:if="${advice.is_handle}">是</td>
+					<td th:if="!${advice.is_handle}">否</td>
+					<td th:text="${#strings.substring(advice.end_time,0,19)}"></td>
+					<td>
+						<button type="button" class="layui-btn"
+							th:onclick="'handle('+${advice.id}+')'">处理</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+			var handle = function(id) {
+				$.ajax({
+					url : "/advice/admin/" + id + "/handle",
+					type : "POST",
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+			form.render();
+		</script>
+	</div>
+</body>
+</html>

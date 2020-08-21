@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 楼栋管理 -->
+	<div th:fragment="index">
+		<div id="community_index_iframe"></div>
+		<script type="text/javascript">
+			$("#community_index_iframe").load("/community/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-container">
+			<form class="layui-form">
+				<div class="layui-row layui-col-space10">
+					<input type="hidden" value="" id="id" placeholder="请输入楼栋id"
+						autocomplete="off" class="layui-input">
+					<div class="layui-col-md8">
+						<input type="number" id="code" placeholder="请输入楼栋编号"
+							autocomplete="off" class="layui-input">
+					</div>
+					<div class="layui-col-md4">
+						<button class="layui-btn" id="community_selectSubmitForm">搜索</button>
+						<button type="button" class="layui-btn"
+							onclick="community_insert()">添加楼栋</button>
+					</div>
+				</div>
+			</form>
+			<div id="comnunity_main_iframe"></div>
+		</div>
+		<script type="text/javascript">
+			//为查询按钮绑定事件
+			$("#community_selectSubmitForm")
+					.click(
+							function(e) {
+								e.preventDefault();//阻止默认事件
+								var id = $("#id").val();
+								var code = $("#code").val();
+								$("#comnunity_main_iframe").load(
+										"/community/select?id=" + id + "&code="
+												+ code);
+							});
+			//触发一次查询，刷新表格
+			$("#community_selectSubmitForm").click();
+			//为添加按钮绑定事件
+			var community_insert = function() {
+				layer.open({
+					type : 2,
+					content : '/community/insert',
+					area : [ '400px', '200px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="select">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<!-- <th>主键</th> -->
+					<th>楼栋编号</th>
+					<th>备注</th>
+					<th>修改</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="community:${communityList}">
+					<!-- <td th:text="${community.id}"></td> -->
+					<td th:text="${community.code}"></td>
+					<td th:text="${community.remark}"></td>
+					<td><button type="button" class="layui-btn"
+							th:onclick="'update_community('+${community.id}+')'">修改</button></td>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+			var update_community = function(id) {
+				layer.open({
+					type : 2,
+					content : '/community/update/' + id,
+					area : [ '400px', '200px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="insert">
+		<form class="layui-form">
+			<div class="layui-form-item">
+				<label class="layui-form-label">楼栋编号</label>
+				<div class="layui-input-block">
+					<input type="number" name="code" required lay-verify="required"
+						placeholder="楼栋编号" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" required lay-verify="required"
+						placeholder="备注" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit
+						lay-filter="communitySubmitForm">立即提交</button>
+					<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(communitySubmitForm)', function(data) {
+				$.ajax({
+					url : "/community",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+	<div th:fragment="update">
+		<form class="layui-form">
+			<input type="hidden" name="id" th:value="${community.id}" />
+			<div class="layui-form-item">
+				<label class="layui-form-label">楼栋编号</label>
+				<div class="layui-input-block">
+					<input type="number" name="code" th:value="${community.code}"
+						required lay-verify="required" placeholder="楼栋编号"
+						autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" th:value="${community.remark}"
+						required lay-verify="required" placeholder="备注" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit
+						lay-filter="communityUpdateSubmitForm">立即提交</button>
+					<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(communityUpdateSubmitForm)', function(data) {
+				$.ajax({
+					url : "/community/update",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+</body>
+</html>

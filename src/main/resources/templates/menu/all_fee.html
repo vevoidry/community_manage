@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 收费总览 -->
+	<div th:fragment="index">
+		<div id="all_fee_index_iframe"></div>
+		<script type="text/javascript">
+			$("#all_fee_index_iframe").load("/person_project/all_fee/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-row layui-col-space10">
+			<div class="layui-col-md4" th:each="data:${dataList}">
+				<div class="layui-card">
+					<div
+						th:class="${data[1]!=data[2]}?'layui-card-header layui-bg-red':'layui-card-header layui-bg-blue'">
+						<a th:text="${data[0]}"
+							th:onclick="'person_project_all('+${data[3]}+')'"></a>
+					</div>
+					<div class="layui-card-body layui-bg-gray">
+						<br />
+						<h1 th:text="${data[1]}+'/'+${data[2]}"></h1>
+						<br />
+						<div>已缴费/总数</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			var person_project_all = function(id) {
+				layer.open({
+					type : 2,
+					content : '/person_project/all_fee/select_div/' + id,
+					area : [ '900px', '600px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="select_div">
+		<div id="yy">
+			<input type="hidden" id="the_id" th:value="${id}">
+			<div class="layui-col-md6">
+				<input type="text" id="name" placeholder="请输入年份月份，格式如：2020年1月"
+					autocomplete="off" class="layui-input">
+			</div>
+			<div class="layui-col-md2">
+				<select id="is_handle" class="layui-input">
+					<option value="">请选择缴费状态</option>
+					<option value="true">已缴费</option>
+					<option value="false">未缴费</option>
+				</select>
+			</div>
+			<div class="layui-col-md2">
+				<button class="layui-btn" onclick="xx()">搜索</button>
+			</div>
+			<table class="layui-table">
+				<thead>
+					<tr>
+					<th>基本信息</th>
+						<th>业主姓名</th>
+						<th>项目名称</th>
+						<th>创建时间</th>
+						<th>缴费时间</th>
+						<th>缴费方式</th>
+						<th>费用</th>
+						<th>状态</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="person_project:${person_projectList}"
+						th:class="${!person_project.is_handle}? 'layui-bg-red'">
+						<td th:text="${person_project.data}"></td>
+						<td th:text="${person_project.person_name}"></td>
+						<td th:text="${person_project.project_name}"></td>
+						<td
+							th:text="${#strings.substring(person_project.create_time,0,19)}"></td>
+						<td th:text="${#strings.substring(person_project.end_time,0,19)}"></td>
+						<td th:text="${person_project.method}"></td>
+						<td th:text="${person_project.money}"></td>
+						<td><span th:if="${person_project.is_handle}">已缴费</span> <span
+							th:if="!${person_project.is_handle}">未缴费</span></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			var xx = function() {
+				var id = $("#the_id").val();
+				var name = $("#name").val();
+				var is_handle = $("#is_handle").val();
+				$("#yy").load(
+						"/person_project/all_fee/select_div/" + id + "?name="
+								+ name + "&is_handle=" + is_handle);
+			}
+		</script>
+	</div>
+</body>
+</html>

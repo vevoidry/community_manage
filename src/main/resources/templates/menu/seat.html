@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 停车位 -->
+	<div th:fragment="index">
+		<div id="seat_index_iframe"></div>
+		<script type="text/javascript">
+			$("#seat_index_iframe").load("/seat/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-container">
+			<div class="layui-row layui-col-space10">
+				<div class="layui-col-md3">
+					<select id="park_id" class="layui-input">
+						<option value="">请选择停车场</option>
+						<option th:each="park:${parkList}" th:value="${park.id}"
+							th:text="${park.type}+':'+${park.code}"></option>
+					</select>
+				</div>
+				<div class="layui-col-md3">
+					<input type="number" id="code" placeholder="请输入车位编号"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md3">
+					<select id="is_sell" class="layui-input">
+						<option value="">请选择车位状态</option>
+						<option value="false">空闲</option>
+						<option value="true">已售出/出租</option>
+					</select>
+				</div>
+				<div class="layui-col-md3">
+					<button class="layui-btn" id="seat_selectSubmitForm">搜索</button>
+					<button type="button" class="layui-btn" onclick="seat_insert()">添加车位</button>
+				</div>
+			</div>
+			<div id="seat_main_iframe"></div>
+		</div>
+		<script type="text/javascript">
+			//为查询按钮绑定事件
+			$("#seat_selectSubmitForm").click(
+					function(e) {
+						e.preventDefault();//阻止默认事件
+						var park_id = $("#park_id").val();
+						var code = $("#code").val();
+						var is_sell = $("#is_sell").val();
+						$("#seat_main_iframe").load(
+								"/seat/select_div?park_id=" + park_id
+										+ "&code=" + code + "&is_sell="
+										+ is_sell);
+					});
+			$("#seat_selectSubmitForm").click();
+			var seat_insert = function() {
+				layer.open({
+					type : 2,
+					content : '/seat/insert',
+					area : [ '600px', '400px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="select_div">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th>停车场编号</th>
+					<th>车位分区</th>
+					<th>车位编号</th>
+					<th>面积（平方米）</th>
+					<th>备注</th>
+					<th>状态</th>
+					<th>租期</th>
+					<th>业主-手机号</th>
+					<th>修改</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="seat:${seatList}">
+					<td th:text="${seat.park_code}"></td>
+					<td th:text="${seat.region}"></td>
+					<td th:text="${seat.code}"></td>
+					<td th:text="${seat.area}"></td>
+					<td th:text="${seat.remark}"></td>
+					<td><span th:if="${seat.type}==null">空闲</span> <span
+						th:if="${seat.type}==1">已出售</span> <span th:if="${seat.type}==2">已出租</span></td>
+					<td th:text="${#strings.substring(seat.end_date,0,10)}"></td>
+					<td th:if="${seat.person_name}!=null"
+						th:text="${seat.person_name}+'-'+${seat.person_phone}"></td>
+					<td th:if="${seat.person_name}==null"></td>
+					<td><button type="button" class="layui-btn"
+							th:onclick="'update_seat('+${seat.id}+')'">修改</button></td>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+			var update_seat = function(id) {
+				layer.open({
+					type : 2,
+					content : '/seat/update/' + id,
+					area : [ '600px', '400px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="insert">
+		<form class="layui-form">
+			<div class="layui-form-item">
+				<label class="layui-form-label">停车场</label>
+				<div class="layui-input-block">
+					<select name="park_id" class="layui-input">
+						<option th:each="park:${parkList}" th:value="${park.id}"
+							th:text="${park.type}+':'+${park.code}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">分区</label>
+				<div class="layui-input-block">
+					<input type="text" name="region" required lay-verify="required"
+						placeholder="分区" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">编号</label>
+				<div class="layui-input-block">
+					<input type="number" name="code" required lay-verify="required"
+						placeholder="编号" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">面积</label>
+				<div class="layui-input-block">
+					<input type="number" name="area" required lay-verify="required"
+						placeholder="面积" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" required lay-verify="required"
+						placeholder="备注" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit lay-filter="seatSubmitForm">立即提交</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(seatSubmitForm)', function(data) {
+				$.ajax({
+					url : "/seat",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+	<div th:fragment="update">
+		<form class="layui-form">
+			<input type="hidden" name="id" th:value="${seat.id}" />
+			<div class="layui-form-item">
+				<label class="layui-form-label">停车场</label>
+				<div class="layui-input-block">
+					<select name="park_id" class="layui-input">
+						<option th:value="${seat.park_id}">请选择停车场</option>
+						<option th:each="park:${parkList}" th:value="${park.id}"
+							th:text="${park.type}+':'+${park.code}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">编号</label>
+				<div class="layui-input-block">
+					<input type="number" name="code" th:value="${seat.code}" required
+						lay-verify="required" placeholder="编号" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">分区</label>
+				<div class="layui-input-block">
+					<input type="text" name="region" th:value="${seat.region}" required
+						lay-verify="required" placeholder="分区" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">面积</label>
+				<div class="layui-input-block">
+					<input type="number" name="area" th:value="${seat.area}" required
+						lay-verify="required" placeholder="面积" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" th:value="${seat.remark}" required
+						lay-verify="required" placeholder="备注" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item" th:if="${seat.person_id}==null">
+				<label class="layui-form-label">绑定方式</label>
+				<div class="layui-input-block">
+					<select name="type" class="layui-input">
+						<option value="1">出售</option>
+						<option value="2">出租</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item" th:if="${seat.person_id}==null">
+				<label class="layui-form-label">出租月份(出售不填写)</label>
+				<div class="layui-input-block">
+					<input type="number" name="months" value="6" placeholder="出租月份"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item" th:if="${seat.person_id}==null">
+				<label class="layui-form-label">业主</label>
+				<div class="layui-input-block">
+					<select class="layui-input" name="person_id">
+						<option value="">请选择业主</option>
+						<option th:each="person:${personList}" th:value="${person.id}"
+							th:text="${person.name}"></option>
+					</select>
+				</div>
+			</div>
+			<div id="person_display"></div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit
+						lay-filter="seatUpdateSubmitForm">立即提交</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(seatUpdateSubmitForm)', function(data) {
+				$.ajax({
+					url : "/seat/update",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+</body>
+</html>

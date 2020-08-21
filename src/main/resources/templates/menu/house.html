@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 房屋管理 -->
+	<div th:fragment="index">
+		<div id="house_index_iframe"></div>
+		<script type="text/javascript">
+			$("#house_index_iframe").load("/house/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-row layui-col-space10">
+			<div class="layui-col-md3">
+				<select id="community_id" class="layui-input"
+					onchange="community_idChange()">
+					<option value="">请选择楼栋</option>
+					<option th:each="community:${communityList}"
+						th:value="${community.id}" th:text="${community.code}+'号楼'"></option>
+				</select>
+			</div>
+			<div class="layui-col-md3" id="house_unit">
+				<select id="unit_id" class="layui-input">
+					<option value="">请选择单元</option>
+				</select>
+			</div>
+			<div class="layui-col-md3">
+				<input type="number" id="code" placeholder="填写房屋编号"
+					autocomplete="off" class="layui-input">
+			</div>
+			<div class="layui-col-md3">
+				<button class="layui-btn" id="house_selectSubmitForm">搜索</button>
+				<button type="button" class="layui-btn" onclick="house_insert()">添加房屋</button>
+			</div>
+		</div>
+		<div id="house_main_iframe"></div>
+		<script type="text/javascript">
+			//为查询按钮绑定事件
+			$("#house_selectSubmitForm").click(
+					function(e) {
+						e.preventDefault();//阻止默认事件
+						var community_id = $("#community_id").val();
+						var unit_id = $("#unit_id").val();
+						var code = $("#code").val();
+						$("#house_main_iframe").load(
+								"/house/select_div?community_id="
+										+ community_id + "&unit_id=" + unit_id
+										+ "&code=" + code);
+					});
+			//触发一次查询，刷新表格
+			$("#house_selectSubmitForm").click();
+			// 当楼栋选择框修改时，刷新单元选择框
+			var community_idChange = function() {
+				var id = $("#community_id").children('option:selected').val();
+				$("#house_unit").load("/house/select_unit/" + id);
+			}
+			//为添加按钮绑定事件
+			var house_insert = function() {
+				layer.open({
+					type : 2,
+					content : '/house/insert',
+					area : [ '600px', '600px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="select_unit">
+		<select id="unit_id" class="layui-input">
+			<option value="">请选择单元</option>
+			<option th:each="unit:${unitList}" th:value="${unit.id}"
+				th:text="${unit.code}+'单元'"></option>
+		</select>
+	</div>
+	<div th:fragment="select_div">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th>楼栋编号</th>
+					<th>单元编号</th>
+					<th>房屋编号</th>
+					<th>楼层</th>
+					<th>户型</th>
+					<th>面积（平方米）</th>
+					<th>单价（元）</th>
+					<th>备注</th>
+					<th>状态</th>
+					<th>业主姓名</th>
+					<th>起始时间</th>
+					<th>终止时间</th>
+					<th>修改</th>
+					<th>水费</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="house:${houseList}">
+					<td th:text="${house.community_code}"></td>
+					<td th:text="${house.unit_code}"></td>
+					<td th:text="${house.code}"></td>
+					<td th:text="${house.floor}"></td>
+					<td th:text="${house.type_room}+${house.type_hall}"></td>
+					<td th:text="${house.area}"></td>
+					<td th:text="${house.price}"></td>
+					<td th:text="${house.remark}"></td>
+					<td th:text="${house.status}"></td>
+					<td th:text="${house.person_name}"></td>
+					<td th:text="${#strings.substring(house.start_time,0,10)}"></td>
+					<td th:text="${#strings.substring(house.end_time,0,10)}"></td>
+					<td><button type="button" class="layui-btn"
+							th:onclick="'update_house('+${house.id}+')'">修改</button></td>
+					<td><button type="button" class="layui-btn"
+							th:onclick="'water_fee('+${house.id}+')'">收水费</button></td>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+			var update_house = function(id) {
+				layer.open({
+					type : 2,
+					content : '/house/update/' + id,
+					area : [ '600px', '600px' ]
+				});
+			}
+			var water_fee = function(house_id) {
+				layer.open({
+					type : 2,
+					content : '/house/' + house_id + '/water_fee',
+					area : [ '600px', '600px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="insert">
+		<div class="layui-form-item">
+			<label class="layui-form-label">请选择楼栋</label>
+			<div class="layui-input-block">
+				<select id="community_id" onchange="community_idChange()"
+					class="layui-input">
+					<option value="">请选择楼栋</option>
+					<option th:each="community:${communityList}"
+						th:value="${community.id}" th:text="${community.code}+'号楼'"></option>
+				</select>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">请选择单元</label>
+			<div class="layui-input-block" id="unit_id_div">
+				<select id="unit_id" class="layui-input">
+					<option value="">请选择单元</option>
+				</select>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">请选择户型</label>
+			<div class="layui-input-block">
+				<div class="layui-input-inline">
+					<select lay-verify="required" id="type_room" class="layui-input">
+						<option value="一室">一室</option>
+						<option value="二室">二室</option>
+						<option value="三室">三室</option>
+						<option value="四室">四室</option>
+						<option value="五室">五室</option>
+						<option value="六室">六室</option>
+						<option value="七室">七室</option>
+						<option value="八室">八室</option>
+					</select>
+				</div>
+				<div class="layui-input-inline">
+					<select lay-verify="required" id="type_hall" class="layui-input">
+						<option value="一厅">一厅</option>
+						<option value="二厅">二厅</option>
+						<option value="三厅">三厅</option>
+						<option value="四厅">四厅</option>
+						<option value="五厅">五厅</option>
+						<option value="六厅">六厅</option>
+						<option value="七厅">七厅</option>
+						<option value="八厅">八厅</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">房屋编号</label>
+			<div class="layui-input-block">
+				<input type="number" id="code" required lay-verify="required"
+					placeholder="请输入房屋编号" autocomplete="off" class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">房屋楼层</label>
+			<div class="layui-input-block">
+				<input type="number" id="floor" required lay-verify="required"
+					placeholder="请输入房屋楼层" autocomplete="off" class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">建筑面积（平方米）</label>
+			<div class="layui-input-block">
+				<input type="number" id="area" required lay-verify="required"
+					placeholder="请输入建筑面积（平方米）" autocomplete="off" class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">房屋单价（元）</label>
+			<div class="layui-input-block">
+				<input type="number" id="price" required lay-verify="required"
+					placeholder="请输入房屋单价（元）" autocomplete="off" class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">备注</label>
+			<div class="layui-input-block">
+				<input type="text" id="remark" required lay-verify="required"
+					placeholder="请输入备注" autocomplete="off" class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-input-block">
+				<button class="layui-btn" onclick="houseSubmitForm()">立即提交</button>
+			</div>
+		</div>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			var community_idChange = function() {
+				var id = $("#community_id").val();
+				$("#unit_id_div").load("/house/select_unit/" + id);
+			}
+			var houseSubmitForm = function() {
+				var unit_id = $("#unit_id").val();
+				var type_room = $("#type_room").val();
+				var type_hall = $("#type_hall").val();
+				var code = $("#code").val();
+				var floor = $("#floor").val();
+				var area = $("#area").val();
+				var price = $("#price").val();
+				var remark = $("#remark").val();
+				$.ajax({
+					url : "/house",
+					type : "POST",
+					data : {
+						"unit_id" : unit_id,
+						"type_room" : type_room,
+						"type_hall" : type_hall,
+						"code" : code,
+						"floor" : floor,
+						"area" : area,
+						"price" : price,
+						"remark" : remark,
+					},
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="update">
+		<div class="layui-form-item">
+			<input type="hidden" id="house_id" th:value="${house.id}" /> <label
+				class="layui-form-label">请选择楼栋</label>
+			<div class="layui-input-block">
+				<select id="community_id" onchange="community_idUpdateChange()"
+					class="layui-input">
+					<option value="">请选择楼栋</option>
+					<option th:each="community:${communityList}"
+						th:value="${community.id}" th:text="${community.code}+'号楼'"></option>
+				</select>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">请选择单元</label>
+			<div class="layui-input-block" id="unit_id_div">
+				<select id="unit_id" class="layui-input">
+					<option th:value="${house.unit_id}">请选择单元</option>
+				</select>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">请选择户型</label>
+			<div class="layui-input-block">
+				<div class="layui-input-inline">
+					<select lay-verify="required" id="type_room" class="layui-input">
+						<option value="一室">一室</option>
+						<option value="二室">二室</option>
+						<option value="三室">三室</option>
+						<option value="四室">四室</option>
+						<option value="五室">五室</option>
+						<option value="六室">六室</option>
+						<option value="七室">七室</option>
+						<option value="八室">八室</option>
+					</select>
+				</div>
+				<div class="layui-input-inline">
+					<select lay-verify="required" id="type_hall" class="layui-input">
+						<option value="一厅">一厅</option>
+						<option value="二厅">二厅</option>
+						<option value="三厅">三厅</option>
+						<option value="四厅">四厅</option>
+						<option value="五厅">五厅</option>
+						<option value="六厅">六厅</option>
+						<option value="七厅">七厅</option>
+						<option value="八厅">八厅</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">房屋编号</label>
+			<div class="layui-input-block">
+				<input type="number" id="code" th:value="${house.code}" required
+					lay-verify="required" placeholder="请输入房屋编号" autocomplete="off"
+					class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">房屋楼层</label>
+			<div class="layui-input-block">
+				<input type="number" id="floor" th:value="${house.floor}" required
+					lay-verify="required" placeholder="请输入房屋楼层" autocomplete="off"
+					class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">建筑面积（平方米）</label>
+			<div class="layui-input-block">
+				<input type="number" id="area" th:value="${house.area}" required
+					lay-verify="required" placeholder="请输入建筑面积（平方米）" autocomplete="off"
+					class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">房屋单价（元）</label>
+			<div class="layui-input-block">
+				<input type="number" id="price" th:value="${house.price}" required
+					lay-verify="required" placeholder="请输入房屋单价（元）" autocomplete="off"
+					class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">备注</label>
+			<div class="layui-input-block">
+				<input type="text" id="remark" th:value="${house.remark}" required
+					lay-verify="required" placeholder="请输入备注" autocomplete="off"
+					class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">业主</label>
+			<div class="layui-input-block">
+				<select id="person_id" class="layui-input">
+					<option value="0">无</option>
+					<option th:each="person:${personList}" th:value="${person.id}"
+						th:text="${person.name}"></option>
+				</select>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-input-block">
+				<button class="layui-btn" onclick="houseUpdateSubmitForm()">立即提交</button>
+			</div>
+		</div>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			var community_idUpdateChange = function() {
+				var id = $("#community_id").val();
+				$("#unit_id_div").load("/house/select_unit/" + id);
+			}
+			var houseUpdateSubmitForm = function() {
+				var id = $("#house_id").val();
+				var unit_id = $("#unit_id").val();
+				var type_room = $("#type_room").val();
+				var type_hall = $("#type_hall").val();
+				var code = $("#code").val();
+				var floor = $("#floor").val();
+				var area = $("#area").val();
+				var price = $("#price").val();
+				var remark = $("#remark").val();
+				var person_id = $("#person_id").val();
+				$.ajax({
+					url : "/house/update",
+					type : "POST",
+					data : {
+						"id" : id,
+						"unit_id" : unit_id,
+						"type_room" : type_room,
+						"type_hall" : type_hall,
+						"code" : code,
+						"floor" : floor,
+						"area" : area,
+						"price" : price,
+						"remark" : remark,
+						"person_id" : person_id
+					},
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="water_fee_div">
+		<input type="hidden" id="house_id" th:value="${house_id}">
+		<div class="layui-form-item">
+			<label class="layui-form-label">项目</label>
+			<div class="layui-input-block">
+				<select id="project_id" class="layui-input">
+					<option value="0">无</option>
+					<option th:each="project:${projectList}" th:value="${project.id}"
+						th:text="${project.name}"></option>
+				</select>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">用水量（吨）</label>
+			<div class="layui-input-block">
+				<input type="number" id="quantity" required lay-verify="required"
+					placeholder="请输入用水量" autocomplete="off" class="layui-input">
+			</div>
+		</div>
+		<!-- <div class="layui-form-item">
+			<label class="layui-form-label">单价（元/吨）</label>
+			<div class="layui-input-block">
+				<input type="number" id="price" value="10" required
+					lay-verify="required" placeholder="请输入水费单价" autocomplete="off"
+					class="layui-input">
+			</div>
+		</div> -->
+		<div class="layui-form-item">
+			<div class="layui-input-block">
+				<button class="layui-btn" onclick="water_fee()">立即提交</button>
+			</div>
+		</div>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			var water_fee = function() {
+				var house_id = $("#house_id").val();
+				var project_id = $("#project_id").val();
+				var quantity = $("#quantity").val();
+				/* var price = $("#price").val(); */
+				$.ajax({
+					url : "/person_project/water_fee",
+					type : "POST",
+					data : {
+						"house_id" : house_id,
+						"project_id" : project_id,
+						"quantity" : quantity
+						/* "price" : price */
+					},
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+		</script>
+	</div>
+</body>
+</html>

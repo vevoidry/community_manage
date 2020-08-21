@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 单元管理 -->
+	<div th:fragment="index">
+		<div id="unit_index_iframe"></div>
+		<script type="text/javascript">
+			$("#unit_index_iframe").load("/unit/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-container">
+			<div class="layui-row layui-col-space10">
+				<div class="layui-col-md3">
+					<select id="community_id" class="layui-input">
+						<option value="">请选择楼栋</option>
+						<option th:each="community:${communityList}"
+							th:value="${community.id}" th:text="${community.code}+'号楼'"></option>
+					</select>
+				</div>
+				<div class="layui-col-md3">
+					<input type="number" id="code" placeholder="请输入单元编号"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md3">
+					<input type="number" id="floor" placeholder="请输入层数"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md3">
+					<button class="layui-btn" id="unit_selectSubmitForm">搜索</button>
+					<button type="button" class="layui-btn" onclick="unit_insert()">添加单元</button>
+				</div>
+			</div>
+			<div id="unit_main_iframe"></div>
+		</div>
+		<script type="text/javascript">
+			//为查询按钮绑定事件
+			$("#unit_selectSubmitForm").click(
+					function(e) {
+						e.preventDefault();//阻止默认事件
+						var community_id = $("#community_id").val();
+						var code = $("#code").val();
+						var floor = $("#floor").val();
+						$("#unit_main_iframe").load(
+								"/unit/select?community_id=" + community_id
+										+ "&code=" + code + "&floor=" + floor);
+					});
+			//触发一次查询，刷新表格
+			$("#unit_selectSubmitForm").click();
+			//为添加按钮绑定事件
+			var unit_insert = function() {
+				layer.open({
+					type : 2,
+					content : '/unit/insert',
+					area : [ '600px', '400px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="select_div">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<!-- <th>主键</th> -->
+					<th>楼栋编号</th>
+					<th>单元编号</th>
+					<th>楼层</th>
+					<th>电梯</th>
+					<th>备注</th>
+					<th>修改</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="unit:${unitList}">
+					<!-- <td th:text="${unit.id}"></td> -->
+					<td th:text="${unit.community_code}"></td>
+					<td th:text="${unit.code}"></td>
+					<td th:text="${unit.floor}"></td>
+					<td><span th:if="${unit.has_elevator}">有</span> <span
+						th:if="!${unit.has_elevator}">无</span></td>
+					<td th:text="${unit.remark}"></td>
+					<td><button type="button" class="layui-btn"
+							th:onclick="'update_unit('+${unit.id}+')'">修改</button></td>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+			var update_unit = function(id) {
+				layer.open({
+					type : 2,
+					content : '/unit/update/' + id,
+					area : [ '600px', '400px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="insert">
+		<form class="layui-form">
+			<div class="layui-form-item">
+				<label class="layui-form-label">楼栋编号</label>
+				<div class="layui-input-block">
+					<select name="community_id" lay-verify="required">
+						<option th:each="community:${communityList}"
+							th:value="${community.id}" th:text="${community.code}+'号楼'"></option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">单元编号</label>
+				<div class="layui-input-block">
+					<input type="number" name="code" required lay-verify="required"
+						placeholder="单元编号" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">层数</label>
+				<div class="layui-input-block">
+					<input type="number" name="floor" required lay-verify="required"
+						placeholder="层数" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">电梯</label>
+				<div class="layui-input-block">
+					<input type="checkbox" name="has_elevator" lay-skin="switch">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" required lay-verify="required"
+						placeholder="备注" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit lay-filter="unitSubmitForm">立即提交</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(unitSubmitForm)', function(data) {
+				$.ajax({
+					url : "/unit",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+	<div th:fragment="update">
+		<form class="layui-form">
+			<input type="hidden" name="id" th:value="${unit.id}">
+			<div class="layui-form-item">
+				<label class="layui-form-label">楼栋编号</label>
+				<div class="layui-input-block">
+					<select name="community_id" lay-verify="required">
+						<option th:value="${unit.community_id}">请选择楼栋</option>
+						<option th:each="community:${communityList}"
+							th:value="${community.id}" th:text="${community.code}+'号楼'"></option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">单元编号</label>
+				<div class="layui-input-block">
+					<input type="number" name="code" th:value="${unit.code}" required
+						lay-verify="required" placeholder="单元编号" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">层数</label>
+				<div class="layui-input-block">
+					<input type="number" name="floor" th:value="${unit.floor}" required
+						lay-verify="required" placeholder="层数" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">电梯</label>
+				<div class="layui-input-block">
+					<input type="checkbox" name="has_elevator" lay-skin="switch">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" th:value="${unit.remark}" required
+						lay-verify="required" placeholder="备注" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit
+						lay-filter="unitUpdateSubmitForm">立即提交</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(unitUpdateSubmitForm)', function(data) {
+				$.ajax({
+					url : "/unit/update",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+</body>
+</html>

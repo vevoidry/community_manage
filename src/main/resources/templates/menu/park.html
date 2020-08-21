@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 停车场 -->
+	<div th:fragment="index">
+		<div id="park_index_iframe"></div>
+		<script type="text/javascript">
+			$("#park_index_iframe").load("/park/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-container">
+			<div class="layui-row layui-col-space10">
+				<div class="layui-col-md4">
+					<select id="type" class="layui-input">
+						<option value="">请选择停车场类型</option>
+						<option value="地上停车场">地上停车场</option>
+						<option value="地下停车场">地下停车场</option>
+					</select>
+				</div>
+				<div class="layui-col-md1">
+					<input type="hidden" id="id" placeholder="请输入停车场ID"
+						autocomplete="off" value="" class="layui-input">
+				</div>
+				<div class="layui-col-md4">
+					<input type="number" id="code" placeholder="请输入停车场编号"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md3">
+					<button class="layui-btn" id="park_selectSubmitForm">搜索</button>
+					<button type="button" class="layui-btn" onclick="park_insert()">添加停车场</button>
+				</div>
+			</div>
+			<div id="park_main_iframe"></div>
+		</div>
+		<script type="text/javascript">
+			//为查询按钮绑定事件
+			$("#park_selectSubmitForm").click(
+					function(e) {
+						e.preventDefault();//阻止默认事件
+						var type = $("#type").val();
+						var id = $("#id").val();
+						var code = $("#code").val();
+						$("#park_main_iframe").load(
+								"/park/select_div?type=" + type + "&id=" + id
+										+ "&code=" + code);
+					});
+			$("#park_selectSubmitForm").click();
+			var park_insert = function() {
+				layer.open({
+					type : 2,
+					content : '/park/insert',
+					area : [ '600px', '400px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="select_div">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th>类型</th>
+					<th>编号</th>
+					<th>备注</th>
+					<th>修改</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="park:${parkList}">
+					<td th:text="${park.type}"></td>
+					<td th:text="${park.code}"></td>
+					<td th:text="${park.remark}"></td>
+					<th><button type="button" class="layui-btn"
+							th:onclick="'update_park('+${park.id}+')'">修改</button></th>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+			var update_park = function(id) {
+				layer.open({
+					type : 2,
+					content : '/park/update/' + id,
+					area : [ '600px', '400px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="insert">
+		<form class="layui-form">
+			<div class="layui-form-item">
+				<label class="layui-form-label">类型</label>
+				<div class="layui-input-block">
+					<select name="type" class="layui-input">
+						<option value="地上停车场">地上停车场</option>
+						<option value="地下停车场">地下停车场</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">停车场编号</label>
+				<div class="layui-input-block">
+					<input type="number" name="code" required lay-verify="required"
+						placeholder="停车场编号" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" required lay-verify="required"
+						placeholder="备注" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit lay-filter="parkSubmitForm">立即提交</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(parkSubmitForm)', function(data) {
+				$.ajax({
+					url : "/park",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+	<div th:fragment="update">
+		<form class="layui-form">
+			<input type="hidden" name="id" th:value="${park.id}" />
+			<div class="layui-form-item">
+				<label class="layui-form-label">类型</label>
+				<div class="layui-input-block">
+					<select name="type" class="layui-input">
+						<option th:if="${park.type}=='地上停车场'" value="地上停车场"
+							selected="selected">地上停车场</option>
+						<option th:if="${park.type}=='地上停车场'" value="地下停车场">地下停车场</option>
+						<option th:if="${park.type}=='地下停车场'" value="地上停车场">地上停车场</option>
+						<option th:if="${park.type}=='地下停车场'" value="地下停车场"
+							selected="selected">地下停车场</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">停车场编号</label>
+				<div class="layui-input-block">
+					<input type="number" name="code" th:value="${park.code}" required
+						lay-verify="required" placeholder="停车场编号" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" th:value="${park.remark}" required
+						lay-verify="required" placeholder="备注" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit
+						lay-filter="parkUpdateSubmitForm">立即提交</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(parkUpdateSubmitForm)', function(data) {
+				$.ajax({
+					url : "/park/update",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+</body>
+</html>

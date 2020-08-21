@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 用户管理 -->
+	<div th:fragment="index">
+		<div id="user_index_iframe"></div>
+		<script type="text/javascript">
+			$("#user_index_iframe").load("/user/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-card">
+			<div class="layui-card-header">
+				<button type="button" class="layui-btn" onclick="user_insert()">添加用户</button>
+			</div>
+			<div class="layui-card-body">
+				<table class="layui-table">
+					<thead>
+						<tr>
+							<th>用户名</th>
+							<th>密码</th>
+							<th>昵称</th>
+							<th>角色</th>
+							<th>手机号</th>
+							<th>邮箱</th>
+							<th>是否可用</th>
+							<th>创建时间</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="userRole:${userRoleMap}">
+							<td th:text="${userRole.key.username}"></td>
+							<td th:text="${userRole.key.password}"></td>
+							<td th:text="${userRole.key.nickname}"></td>
+							<td th:text="${userRole.value.name}"></td>
+							<td th:text="${userRole.key.phone}"></td>
+							<td th:text="${userRole.key.email}"></td>
+							<td th:if="${userRole.key.is_using}">是</td>
+							<td th:if="!${userRole.key.is_using}">否</td>
+							<td th:text="${#strings.substring(userRole.key.insert_date,0,19)}"></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			var user_insert = function() {
+				layer.open({
+					type : 2,
+					content : '/user/insert',
+					area : [ '800px', '400px' ]
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="insert">
+		<form class="layui-form">
+			<div class="layui-form-item">
+				<label class="layui-form-label">用户名</label>
+				<div class="layui-input-block">
+					<input type="text" name="username" required lay-verify="required"
+						placeholder="用户名" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">密码</label>
+				<div class="layui-input-block">
+					<input type="password" name="password" required
+						lay-verify="required" placeholder="密码" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">昵称</label>
+				<div class="layui-input-block">
+					<input type="text" name="nickname" required lay-verify="required"
+						placeholder="昵称" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">选择框</label>
+				<div class="layui-input-block">
+					<select name="role_id" lay-verify="required">
+						<option value="0">请选择角色</option>
+						<option th:each="role:${roleList}" th:value="${role.id}"
+							th:text="${role.name}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">手机</label>
+				<div class="layui-input-block">
+					<input type="text" name="phone" required lay-verify="required"
+						placeholder="手机" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">邮箱</label>
+				<div class="layui-input-block">
+					<input type="text" name="email" required lay-verify="required"
+						placeholder="邮箱" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">是否可用</label>
+				<div class="layui-input-block">
+					<input type="checkbox" name="is_using" lay-skin="switch">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit lay-filter="user_submit">立即提交</button>
+					<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(user_submit)', function(data) {
+				$.ajax({
+					url : "/user",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+</body>
+</html>

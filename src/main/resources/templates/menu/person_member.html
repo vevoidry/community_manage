@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 业主成员 -->
+	<div th:fragment="index">
+		<div id="person_member_index_iframe"></div>
+		<script type="text/javascript">
+			$("#person_member_index_iframe").load("/person_member/main");
+		</script>
+	</div>
+	<div th:fragment="main">
+		<div class="layui-container">
+			<div class="layui-row layui-col-space10">
+				<div class="layui-col-md3">
+					<select onchange="select_personOnchange()" id="select_person_div"
+						class="layui-input">
+						<option value="0">请选择业主</option>
+						<option th:each="person:${personList}" th:value="${person.id}"
+							th:text="${person.name}"></option>
+					</select>
+				</div>
+				<div class="layui-col-md3">
+					<input type="text" id="id_card_number" placeholder="请输入业主身份证"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md3">
+					<input type="number" id="phone" placeholder="请输入业主手机号"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md3">
+					<button class="layui-btn" id="person_memeber_selectSubmitForm">搜索</button>
+				</div>
+			</div>
+			<div id="person_memeber_main_iframe"></div>
+		</div>
+		<script type="text/javascript">
+			//为查询按钮绑定事件
+			$("#person_memeber_selectSubmitForm").click(
+					function(e) {
+						e.preventDefault();//阻止默认事件
+						var id_card_number = $("#id_card_number").val();
+						var phone = $("#phone").val();
+						$("#person_memeber_main_iframe").load(
+								"/person_member/select_person?id_card_number="
+										+ id_card_number + "&phone=" + phone);
+					});
+			$("#person_memeber_selectSubmitForm").click();
+			var select_personOnchange = function() {
+				var person_id = $("#select_person_div").val();
+				$("#person_memeber_main_iframe").load(
+						"/person_member/select_person/" + person_id);
+			}
+		</script>
+	</div>
+	<div th:fragment="select_person">
+		<div th:if="${person}!=null">
+			<div class="layui-container">
+				<div class="layui-col-md3">
+					<img th:src="'/image/'+${person.image}" width="100px" heigh="100px">
+				</div>
+				<div class="layui-col-md3">
+					<div>
+						<span>姓名：</span><span th:text="${person.name}"></span>
+					</div>
+					<br />
+					<div>
+						<span>性别：</span><span th:text="${person.gender}"></span>
+					</div>
+					<br />
+					<div>
+						<span>年龄：</span><span th:text="${person.age}"></span>
+					</div>
+				</div>
+				<div class="layui-col-md3">
+					<div>
+						<span>身份证：</span><span th:text="${person.id_card_number}"></span>
+					</div>
+					<br />
+					<div>
+						<span>手机号：</span><span th:text="${person.phone}"></span>
+					</div>
+					<br />
+					<div>
+						<span>备注：</span><span th:text="${person.remark}"></span>
+					</div>
+				</div>
+				<div class="layui-col-md3">
+					<div>
+						<button type="button" class="layui-btn"
+							th:onclick="'select_person_memeber('+${person.id}+')'">查看业主成员</button>
+					</div>
+					<br />
+					<div>
+						<button type="button" class="layui-btn"
+							th:onclick="'person_memeber_insert('+${person.id}+')'">添加业主成员</button>
+					</div>
+				</div>
+			</div>
+			<div id="person_member_div2"></div>
+			<script type="text/javascript">
+				var select_person_memeber = function(person_id) {
+					$("#person_member_div2")
+							.load("/person_member/" + person_id);
+				}
+				var person_memeber_insert = function(person_id) {
+					layer.open({
+						type : 2,
+						content : '/person_member/insert/' + person_id,
+						area : [ '600px', '600px' ]
+					});
+				}
+			</script>
+		</div>
+	</div>
+	<div th:fragment="select_div2">
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th>姓名</th>
+					<th>性别</th>
+					<th>年龄</th>
+					<th>类型</th>
+					<th>身份证</th>
+					<th>手机号</th>
+					<th>备注</th>
+					<th>修改</th>
+					<th>删除</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="person_member:${person_memberList}">
+					<td th:text="${person_member.name}"></td>
+					<td th:text="${person_member.gender}"></td>
+					<td th:text="${person_member.age}"></td>
+					<td th:text="${person_member.type}"></td>
+					<td th:text="${person_member.id_card_number}"></td>
+					<td th:text="${person_member.phone}"></td>
+					<td th:text="${person_member.remark}"></td>
+					<td><button type="button" class="layui-btn"
+							th:onclick="'update_person_member('+${person_member.id}+')'">修改</button></td>
+					<td><button type="button" class="layui-btn  layui-btn-danger"
+							th:onclick="'delete_person_member('+${person_member.id}+')'">删除</button></td>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+			var update_person_member = function(id) {
+				layer.open({
+					type : 2,
+					content : '/person_member/update/' + id,
+					area : [ '600px', '600px' ]
+				});
+			}
+			var delete_person_member = function(id) {
+				$.ajax({
+					url : "/person_member/delete/" + id,
+					type : "get",
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+		</script>
+	</div>
+	<div th:fragment="insert">
+		<form class="layui-form">
+			<input type="hidden" name="person_id" th:value="${person.id}" />
+			<div class="layui-form-item">
+				<label class="layui-form-label">姓名</label>
+				<div class="layui-input-block">
+					<input type="text" name="name" required lay-verify="required"
+						placeholder="姓名" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">性别</label>
+				<div class="layui-input-block">
+					<select name="gender" class="layui-input">
+						<option value="男">男</option>
+						<option value="女">女</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">年龄</label>
+				<div class="layui-input-block">
+					<input type="number" name="age" required lay-verify="required"
+						placeholder="年龄" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">类型</label>
+				<div class="layui-input-block">
+					<select name="type" class="layui-input">
+						<option value="家庭成员">家庭成员</option>
+						<option value="租客">租客</option>
+						<option value="其他">其他</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">身份证</label>
+				<div class="layui-input-block">
+					<input type="text" name="id_card_number" required
+						lay-verify="required" placeholder="身份证" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">手机号</label>
+				<div class="layui-input-block">
+					<input type="number" name="phone" required lay-verify="required"
+						placeholder="手机号" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" required lay-verify="required"
+						placeholder="备注" autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit
+						lay-filter="person_memberSubmitForm">立即提交</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(person_memberSubmitForm)', function(data) {
+				$.ajax({
+					url : "/person_member",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+	<div th:fragment="update">
+		<form class="layui-form">
+			<input type="hidden" name="id" th:value="${person_member.id}" /> <input
+				type="hidden" name="person_id" th:value="${person_member.person_id}" />
+			<div class="layui-form-item">
+				<label class="layui-form-label">姓名</label>
+				<div class="layui-input-block">
+					<input type="text" name="name" th:value="${person_member.name}"
+						required lay-verify="required" placeholder="姓名" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">性别</label>
+				<div class="layui-input-block">
+					<select name="gender" class="layui-input">
+						<option th:if="${person_member.gender}=='男'" value="男"
+							selected="selected">男</option>
+						<option th:if="${person_member.gender}=='男'" value="女">女</option>
+						<option th:if="${person_member.gender}=='女'" value="男">男</option>
+						<option th:if="${person_member.gender}=='女'" value="女"
+							selected="selected">女</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">年龄</label>
+				<div class="layui-input-block">
+					<input type="number" name="age" th:value="${person_member.age}"
+						required lay-verify="required" placeholder="年龄" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">类型</label>
+				<div class="layui-input-block">
+					<select name="type" class="layui-input">
+						<option th:if="${person_member.type}=='家庭成员'" value="家庭成员"
+							selected="selected">家庭成员</option>
+						<option th:if="${person_member.type}!='家庭成员'" value="家庭成员">家庭成员</option>
+						<option th:if="${person_member.type}=='租客'" value="租客"
+							selected="selected">租客</option>
+						<option th:if="${person_member.type}!='租客'" value="租客">租客</option>
+						<option th:if="${person_member.type}=='其他'" value="其他"
+							selected="selected">其他</option>
+						<option th:if="${person_member.type}!='其他'" value="其他">其他</option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">身份证</label>
+				<div class="layui-input-block">
+					<input type="text" name="id_card_number"
+						th:value="${person_member.id_card_number}" required
+						lay-verify="required" placeholder="身份证" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">手机号</label>
+				<div class="layui-input-block">
+					<input type="number" name="phone" th:value="${person_member.phone}"
+						required lay-verify="required" placeholder="手机号"
+						autocomplete="off" class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">备注</label>
+				<div class="layui-input-block">
+					<input type="text" name="remark" th:value="${person_member.remark}"
+						required lay-verify="required" placeholder="备注" autocomplete="off"
+						class="layui-input">
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<input type="hidden" name="image" th:value="${person_member.image}"
+					required lay-verify="required" placeholder="头像" autocomplete="off"
+					class="layui-input">
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" lay-submit
+						lay-filter="person_memberUpdateSubmitForm">立即提交</button>
+				</div>
+			</div>
+		</form>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			//监听提交
+			form.on('submit(person_memberUpdateSubmitForm)', function(data) {
+				$.ajax({
+					url : "/person_member/update",
+					type : "POST",
+					data : data.field,
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+				return false;
+			});
+			form.render();
+		</script>
+	</div>
+</body>
+</html>

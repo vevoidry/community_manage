@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<body>
+	<!-- 缴费清单 -->
+	<div th:fragment="index">
+		<div id="person_project_index_iframe"></div>
+		<script type="text/javascript">
+			$("#person_project_index_iframe").load("/person_project/main");
+		</script>
+	</div>
+	<!-- 收费项目管理的主页 -->
+	<div th:fragment="main">
+		<div class="layui-container">
+			<div class="layui-row layui-col-space10">
+				<div class="layui-col-md4">
+					<input type="text" id="name" placeholder="请输入收费项目名"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md2">
+					<input type="text" id="data_name" placeholder="基本信息"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md2">
+					<input type="text" id="person_name" placeholder="业主姓名"
+						autocomplete="off" class="layui-input">
+				</div>
+				<div class="layui-col-md1">
+					<select id="is_handle" class="layui-input">
+						<option value="">缴费状态</option>
+						<option value="true">已缴费</option>
+						<option value="false">未缴费</option>
+					</select>
+				</div>
+				<div class="layui-col-md1">
+					<button class="layui-btn" id="person_project_selectSubmitForm">搜索</button>
+				</div>
+				<div class="layui-col-md2">
+					<button type="button" class="layui-btn"
+						onclick="person_project_insert()">添加缴费清单</button>
+				</div>
+			</div>
+			<div id="person_project_main_iframe"></div>
+		</div>
+		<script type="text/javascript">
+			//为查询按钮绑定事件
+			$("#person_project_selectSubmitForm").click(
+					function(e) {
+						e.preventDefault();//阻止默认事件
+						var name = $("#name").val();
+						var data_name = $("#data_name").val();
+						var is_handle = $("#is_handle").val();
+						var person_name = $("#person_name").val();
+						$("#person_project_main_iframe").load(
+								"/person_project/select_div?name=" + name
+										+ "&is_handle=" + is_handle
+										+ "&person_name=" + person_name
+										+ "&data_name=" + data_name);
+					});
+			$("#person_project_selectSubmitForm").click();
+			var person_project_insert = function() {
+				layer.open({
+					type : 2,
+					content : '/person_project/insert',
+					area : [ '600px', '400px' ]
+				});
+			}
+			var search = function(name) {
+				$("#person_project_main_iframe").load(
+						"/person_project/select_div?name=" + name);
+			}
+		</script>
+	</div>
+	<!-- 收费项目管理的表格 -->
+	<div th:fragment="select_div">
+		<div class="layui-form-item">
+			<label class="layui-form-label">缴费方式</label>
+			<div class="layui-input-block">
+				<select id="method" class="layui-input">
+					<option value="微信">微信</option>
+					<option value="支付宝">支付宝</option>
+				</select>
+			</div>
+		</div>
+		<table class="layui-table">
+			<thead>
+				<tr>
+					<th>基本信息</th>
+					<th>业主姓名</th>
+					<th>项目名称</th>
+					<th>创建时间</th>
+					<th>缴费时间</th>
+					<th>缴费方式</th>
+					<th>费用</th>
+					<th>状态</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="person_project:${person_projectList}"
+					th:class="${!person_project.is_handle}? 'layui-bg-red'">
+					<td th:text="${person_project.data}"></td>
+					<td th:text="${person_project.person_name}"></td>
+					<td th:text="${person_project.project_name}"></td>
+					<td
+						th:text="${#strings.substring(person_project.create_time,0,19)}"></td>
+					<td th:text="${#strings.substring(person_project.end_time,0,19)}"></td>
+					<td th:text="${person_project.method}"></td>
+					<td th:text="${person_project.money}"></td>
+					<td><span th:if="${person_project.is_handle}">已缴费</span> <span
+						th:if="!${person_project.is_handle}">未缴费</span></td>
+					<td>
+						<button type="button" class="layui-btn"
+							th:if="!${person_project.is_handle}"
+							th:onclick="'handle('+${person_project.id}+')'">缴费</button>
+						<button type="button" class="layui-btn"
+							th:if="${person_project.is_handle}"
+							th:onclick="'unhandle('+${person_project.id}+')'">取消缴费</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+			var handle = function(id) {
+				var method = $("#method").val();
+				$.ajax({
+					url : "/person_project/person/" + id + "/handle/" + method,
+					type : "POST",
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+			var unhandle = function(id) {
+				$.ajax({
+					url : "/person_project/person/" + id + "/unhandle",
+					type : "POST",
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+			form.render();
+		</script>
+	</div>
+	<!-- 添加收费项目的弹出框 -->
+	<div th:fragment="insert">
+		<!-- 收费范围 -->
+		<div class="layui-form-item">
+			<label class="layui-form-label">收费范围</label>
+			<div class="layui-input-block">
+				<select class="layui-input" id="range_id"
+					onchange="range_id_onchange()">
+					<option value="小区">小区</option>
+					<option value="楼栋">楼栋</option>
+					<option value="单元">单元</option>
+					<option value="房屋">房屋</option>
+					<option value="所有停车场">所有停车场</option>
+					<option value="一个停车场">一个停车场</option>
+					<option value="一个车位">一个车位</option>
+				</select>
+			</div>
+		</div>
+		<div id="range_div"></div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">收费项目</label>
+			<div class="layui-input-block">
+				<select class="layui-input" id="project_id">
+					<option th:each="project:${projectList}" th:value="${project.id}"
+						th:text="${project.name}"></option>
+				</select>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<div class="layui-input-block">
+				<button class="layui-btn" onclick="person_projectSubmit()">立即提交</button>
+			</div>
+		</div>
+		<!-- 公共静态资源 -->
+		<div th:include="template/common::common"></div>
+		<script type="text/javascript">
+			var range_id_onchange = function() {
+				var range = $("#range_id").val();
+				$("#range_div").load("/person_project/range?range=" + range);
+			}
+			range_id_onchange();
+			//监听提交
+			var person_projectSubmit = function() {
+				var range = $("#range_id").val();
+				var community_id = $("#community_id").val();
+				var unit_id = $("#unit_id").val();
+				var house_id = $("#house_id").val();
+				var park_id = $("#park_id").val();
+				var seat_id = $("#seat_id").val();
+				var project_id = $("#project_id").val();
+				$.ajax({
+					url : "/person_project",
+					type : "POST",
+					data : {
+						"range" : range,
+						"community_id" : community_id,
+						"unit_id" : unit_id,
+						"house_id" : house_id,
+						"park_id" : park_id,
+						"seat_id" : seat_id,
+						"project_id" : project_id,
+					},
+					dataType : "JSON",
+					async : true,
+					success : function(result) {
+						layer.msg("操作成功");
+					},
+					error : function(err) {
+						layer.msg(err.responseJSON.message);
+					}
+				});
+			}
+			form.render();
+		</script>
+	</div>
+	<!-- 小区 -->
+	<div th:fragment="select_range"></div>
+	<!-- 获取楼栋选择框 -->
+	<div th:fragment="select_community1">
+		<div class="layui-form-item">
+			<label class="layui-form-label">楼栋编号</label>
+			<div class="layui-input-block">
+				<select id="community_id" class="layui-input">
+					<option th:each="community:${communityList}"
+						th:value="${community.id}" th:text="${community.code}"></option>
+				</select>
+			</div>
+		</div>
+	</div>
+	<!-- 获取楼栋选择框 -->
+	<div th:fragment="select_community2">
+		<div class="layui-form-item">
+			<label class="layui-form-label">楼栋编号</label>
+			<div class="layui-input-block">
+				<select id="community_id" class="layui-input" onchange="a()">
+					<option th:each="community:${communityList}"
+						th:value="${community.id}" th:text="${community.code}"></option>
+				</select>
+			</div>
+		</div>
+		<div id="aa"></div>
+		<script type="text/javascript">
+			var a = function() {
+				var community_id = $("#community_id").val();
+				$("#aa").load(
+						"/person_project/select_unit?community_id="
+								+ community_id);
+			}
+			a();
+		</script>
+	</div>
+	<!-- 根据楼栋获取单元选择框 -->
+	<div th:fragment="select_unit">
+		<div class="layui-form-item">
+			<label class="layui-form-label">单元</label>
+			<div class="layui-input-block">
+				<select id="unit_id" class="layui-input">
+					<option th:each="unit:${unitList}" th:value="${unit.id}"
+						th:text="${unit.code}"></option>
+				</select>
+			</div>
+		</div>
+	</div>
+	<!-- 获取楼栋选择框 -->
+	<div th:fragment="select_community3">
+		<div class="layui-form-item">
+			<label class="layui-form-label">楼栋编号</label>
+			<div class="layui-input-block">
+				<select id="community_id" class="layui-input" onchange="a()">
+					<option th:each="community:${communityList}"
+						th:value="${community.id}" th:text="${community.code}"></option>
+				</select>
+			</div>
+		</div>
+		<div id="aa"></div>
+		<script type="text/javascript">
+			var a = function() {
+				var community_id = $("#community_id").val();
+				$("#aa").load(
+						"/person_project/select_unit2?community_id="
+								+ community_id);
+			}
+			a();
+		</script>
+	</div>
+	<!-- 根据楼栋获取单元选择框 -->
+	<div th:fragment="select_unit2">
+		<div class="layui-form-item">
+			<label class="layui-form-label">单元编号</label>
+			<div class="layui-input-block">
+				<select id="unit_id" class="layui-input" onchange="b()">
+					<option th:each="unit:${unitList}" th:value="${unit.id}"
+						th:text="${unit.code}"></option>
+				</select>
+			</div>
+		</div>
+		<div id="bb"></div>
+		<script type="text/javascript">
+			var b = function() {
+				var unit_id = $("#unit_id").val();
+				$("#bb")
+						.load("/person_project/select_house?unit_id=" + unit_id);
+			}
+			b();
+		</script>
+	</div>
+	<!-- 根据单元获取房屋选择框 -->
+	<div th:fragment="select_house">
+		<div class="layui-form-item">
+			<label class="layui-form-label">房屋编号</label>
+			<div class="layui-input-block">
+				<select id="house_id" class="layui-input">
+					<option th:each="house:${houseList}" th:value="${house.id}"
+						th:text="${house.code}"></option>
+				</select>
+			</div>
+		</div>
+	</div>
+	<!-- 获取停车场选择框 -->
+	<div th:fragment="select_park1">
+		<div class="layui-form-item">
+			<label class="layui-form-label">停车场编号</label>
+			<div class="layui-input-block">
+				<select id="park_id" class="layui-input">
+					<option th:each="park:${parkList}" th:value="${park.id}"
+						th:text="${park.type}+':'+${park.code}"></option>
+				</select>
+			</div>
+		</div>
+	</div>
+	<!-- 获取停车场选择框 -->
+	<div th:fragment="select_park2">
+		<div class="layui-form-item">
+			<label class="layui-form-label">停车场编号</label>
+			<div class="layui-input-block">
+				<select id="park_id" class="layui-input" onchange="d()">
+					<option th:each="park:${parkList}" th:value="${park.id}"
+						th:text="${park.type}+':'+${park.code}"></option>
+				</select>
+			</div>
+		</div>
+		<div id="cc"></div>
+		<script type="text/javascript">
+			var d = function() {
+				var park_id = $("#park_id").val();
+				$("#cc").load("/person_project/select_seat?park_id=" + park_id);
+			}
+			d();
+		</script>
+	</div>
+	<!-- 获取车位选择框 -->
+	<div th:fragment="select_seat">
+		<div class="layui-form-item">
+			<label class="layui-form-label">车位编号</label>
+			<div class="layui-input-block">
+				<select id="seat_id" class="layui-input">
+					<option th:each="seat:${seatList}" th:value="${seat.id}"
+						th:text="${seat.code}"></option>
+				</select>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>管理员页面</title>
+</head>
+<body class="layui-layout-body">
+	<div class="layui-layout layui-layout-admin">
+		<div class="layui-header">
+			<div class="layui-logo">物业管理系统</div>
+			<ul class="layui-nav layui-layout-right">
+				<li class="layui-nav-item"><a> <!-- 用户 --> <img
+						th:if="${session.person}==null"
+						src="/image/user_default_image.jpg" class="layui-nav-img"> <span
+						th:if="${session.person}==null" th:text="${session.user.nickname}"></span>
+						<!-- 业主 --> <img th:if="${session.person}!=null"
+						th:src="'/image/'+${session.person.image}" class="layui-nav-img">
+						<span th:if="${session.person}!=null"
+						th:text="${session.person.name}"></span>
+				</a>
+					<dl class="layui-nav-child">
+						<dd>
+							<a href="/doLogout">退出</a>
+						</dd>
+					</dl></li>
+			</ul>
+		</div>
+		<div class="layui-side layui-bg-black">
+			<section class="layui-side-scroll">
+				<!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+				<ul class="layui-nav layui-nav-tree">
+					<li class="layui-nav-item"
+						th:each="menuMenuList:${menuMenuListMap}"><a> <i
+							th:class="'layui-icon '+${menuMenuList.key.icon}"></i> <span
+							th:text="${menuMenuList.key.name}"></span>
+					</a>
+						<dl class="layui-nav-child" th:each="menu:${menuMenuList.value}">
+							<dd>
+								<a th:href="'/menu/'+${menu.id}"><i
+									th:class="'layui-icon '+${menu.icon}"></i> <span
+									th:text="${menu.name}"></span></a>
+							</dd>
+						</dl></li>
+				</ul>
+			</section>
+		</div>
+		<div class="layui-body">
+			<div id="main_iframe"
+				style="width: 100%; height: 100%; padding: 15px;"></div>
+		</div>
+		<div class="layui-footer">欢迎使用！</div>
+	</div>
+	<!-- 公共静态资源 -->
+	<div th:include="template/common::common"></div>
+	<script type="text/javascript">
+		$("section>ul>li>dl>dd>a").click(function(e) {
+			e.preventDefault();//阻止默认操作
+			$("#main_iframe").load($(this).attr("href"));
+		});
+	</script>
+</body>
+</html>
